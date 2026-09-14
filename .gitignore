@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Large Binaries (do not commit to Git)
+*.exe
+cloudflared.exe
+ngrok.exe
+bore.exe
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary Tunnel & Status files
+public_url*.txt
+serveo_url.txt
+bore_url.txt
+*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
