@@ -1,0 +1,318 @@
+{
+  "name": "VFSTR University PhD Monitoring & Multi-Agent Governance Platform",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "node-trigger-schedule",
+      "name": "Daily Academic Governance Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "phd-evaluation-webhook",
+        "options": {}
+      },
+      "id": "node-trigger-webhook",
+      "name": "PhD Evaluation Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        480
+      ],
+      "webhookId": "phd-eval-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Load PhD Scholars Data and Scoring Matrix\nconst scholarsData = [\n  {\n    \"id\": 1,\n    \"reg_no\": \"141PG04204\",\n    \"name\": \"Cmak Zeelan Basha\",\n    \"research_area\": \"Machine Learning\",\n    \"admission_year\": 2014,\n    \"current_status\": \"COURSEWORK_COMPLETED\",\n    \"supervisor\": { \"name\": \"Dr. V. Radha Krishna\", \"designation\": \"Professor\" },\n    \"publications\": [\n      { \"title\": \"Advanced ML Architectures\", \"venue\": \"IEEE Trans Cybernetics\", \"category_code\": \"CAT1\", \"points\": 5.0, \"is_tier1\": true },\n      { \"title\": \"Robust Deep Feature Extraction\", \"venue\": \"Pattern Recognition\", \"category_code\": \"CAT1\", \"points\": 5.0, \"is_tier1\": true },\n      { \"title\": \"Edge Intelligence Framework\", \"venue\": \"IEEE BigData Conf\", \"category_code\": \"CAT6\", \"points\": 3.0, \"is_tier1\": false }\n    ]\n  },\n  {\n    \"id\": 2,\n    \"reg_no\": \"141PH04001\",\n    \"name\": \"K. Venkatesh\",\n    \"research_area\": \"Cloud Computing\",\n    \"admission_year\": 2014,\n    \"current_status\": \"COLLOQUIUM_COMPLETED\",\n    \"supervisor\": { \"name\": \"Dr. Ch. Sekhar\", \"designation\": \"Associate Professor\" },\n    \"publications\": [\n      { \"title\": \"Distributed Multi-Cloud Broker\", \"venue\": \"SCOPUS Journal of Systems\", \"category_code\": \"CAT4\", \"points\": 4.0, \"is_tier1\": false },\n      { \"title\": \"Container Orchestration Engine\", \"venue\": \"Refereed Int Conference\", \"category_code\": \"CAT6\", \"points\": 3.0, \"is_tier1\": false },\n      { \"title\": \"Microservice Security Protocol\", \"venue\": \"DC Repute Journal\", \"category_code\": \"CAT7\", \"points\": 2.5, \"is_tier1\": false },\n      { \"title\": \"Patent on Cloud Balancing\", \"venue\": \"Indian Patent Office\", \"category_code\": \"CAT5_PUB\", \"points\": 2.0, \"is_tier1\": false },\n      { \"title\": \"National Conf on Cloud\", \"venue\": \"National Conf Proc\", \"category_code\": \"CAT9\", \"points\": 1.5, \"is_tier1\": false }\n    ]\n  },\n  {\n    \"id\": 3,\n    \"reg_no\": \"151PG04202\",\n    \"name\": \"M. Suresh\",\n    \"research_area\": \"NLP & AI\",\n    \"admission_year\": 2015,\n    \"current_status\": \"SYNOPSIS_SUBMITTED\",\n    \"supervisor\": { \"name\": \"Dr. S. Koteswara Rao\", \"designation\": \"Professor\" },\n    \"publications\": [\n      { \"title\": \"Telugu BERT Transformer Model\", \"venue\": \"ACM Computing Surveys\", \"category_code\": \"CAT1\", \"points\": 5.0, \"is_tier1\": true },\n      { \"title\": \"Indic NLP Preprocessing Suite\", \"venue\": \"EMNLP First Level\", \"category_code\": \"CAT2\", \"points\": 4.5, \"is_tier1\": true },\n      { \"title\": \"Speech Recognition Architecture\", \"venue\": \"IEEE Scopus Journal\", \"category_code\": \"CAT4\", \"points\": 4.0, \"is_tier1\": false }\n    ]\n  },\n  {\n    \"id\": 4,\n    \"reg_no\": \"161PH04005\",\n    \"name\": \"P. Ramesh Kumar\",\n    \"research_area\": \"Cybersecurity\",\n    \"admission_year\": 2016,\n    \"current_status\": \"COURSEWORK_IN_PROGRESS\",\n    \"supervisor\": { \"name\": \"Dr. T. Ravi\", \"designation\": \"Assistant Professor\" },\n    \"publications\": [\n      { \"title\": \"Zero Trust Protocol for IoT\", \"venue\": \"Refereed National Conf\", \"category_code\": \"CAT9\", \"points\": 1.5, \"is_tier1\": false },\n      { \"title\": \"Survey on Ransomware\", \"venue\": \"Refereed Int Conf\", \"category_code\": \"CAT8\", \"points\": 2.0, \"is_tier1\": false }\n    ]\n  }\n];\n\nreturn scholarsData.map(scholar => ({ json: scholar }));\n"
+      },
+      "id": "node-load-dataset",
+      "name": "Agent 25: Load PhD Scholars Dossiers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 17: Faculty Research Publications Monitoring & Normalization\nconst scholar = $input.first().json;\nconst publications = scholar.publications || [];\n\n// Standard 9-Category Points Scoring Matrix\nconst SCORING_MATRIX = {\n  'CAT1': { category_no: 1, name: 'SCI / SCI-E Indexed / ABDC Journals', points: 5.0, is_tier1: true },\n  'CAT2': { category_no: 2, name: 'Top-Notch Conferences (First Level, SRB)', points: 4.5, is_tier1: true },\n  'CAT3': { category_no: 3, name: 'Top-Notch Conferences (Second Level, SRB)', points: 4.0, is_tier1: false },\n  'CAT4': { category_no: 4, name: 'SCOPUS / E-SCI Indexed Journal', points: 4.0, is_tier1: false },\n  'CAT5_PUB': { category_no: 5, name: 'Patents Published', points: 2.0, is_tier1: false },\n  'CAT5_GRANT': { category_no: 5, name: 'Patents Granted (DC Approved)', points: 3.5, is_tier1: false },\n  'CAT6': { category_no: 6, name: 'Refereed Int. Conference (High-Class Publisher)', points: 3.0, is_tier1: false },\n  'CAT7': { category_no: 7, name: 'Other Refereed Journals of Repute (DC)', points: 2.5, is_tier1: false },\n  'CAT8': { category_no: 8, name: 'Refereed Int. Conferences (DC)', points: 2.0, is_tier1: false },\n  'CAT9': { category_no: 9, name: 'Refereed National Conferences (DC)', points: 1.5, is_tier1: false }\n};\n\nlet cumulativePoints = 0;\nlet tier1Count = 0;\nconst tier1Papers = [];\nconst categoryBreakdown = {};\n\npublications.forEach(pub => {\n  const meta = SCORING_MATRIX[pub.category_code] || { points: 0, is_tier1: false, name: 'Unknown' };\n  const pts = meta.points;\n  cumulativePoints += pts;\n  categoryBreakdown[meta.name] = (categoryBreakdown[meta.name] || 0) + pts;\n  \n  if (meta.is_tier1) {\n    tier1Count += 1;\n    tier1Papers.push({\n      title: pub.title,\n      venue: pub.venue,\n      category: meta.name,\n      points: pts\n    });\n  }\n});\n\nreturn [{\n  json: {\n    ...scholar,\n    cumulative_points: Math.round(cumulativePoints * 10) / 10,\n    tier1_count: tier1Count,\n    tier1_papers: tier1Papers,\n    category_breakdown: categoryBreakdown\n  }\n}];\n"
+      },
+      "id": "node-agent17-calc",
+      "name": "Agent 17: Publication Ingestion & 9-Category Scoring",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 18: Journal Quartile & Verification Engine\nconst item = $input.first().json;\nconst verifiedPubs = (item.publications || []).map(p => {\n  let quartile = 'Q3';\n  let predatoryRisk = false;\n  if (p.category_code === 'CAT1') quartile = 'Q1';\n  else if (p.category_code === 'CAT2' || p.category_code === 'CAT4') quartile = 'Q2';\n  \n  return {\n    ...p,\n    quartile: quartile,\n    predatory_risk: predatoryRisk,\n    verified_by_agent18: true\n  };\n});\n\nreturn [{\n  json: {\n    ...item,\n    verified_publications: verifiedPubs\n  }\n}];\n"
+      },
+      "id": "node-agent18-verify",
+      "name": "Agent 18: Journal Quartile & Predatory Risk Verifier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 25: Strict Dual-Condition Regulatory Evaluation Engine\nconst scholar = $input.first().json;\nconst points = scholar.cumulative_points || 0;\nconst tier1Count = scholar.tier1_count || 0;\n\n// Condition 1: Mandatory Tier-1 Publication Rule (>= 1 paper in Category 1 or Category 2)\nconst rule1Satisfied = (tier1Count >= 1);\n\n// Condition 2: Cumulative Points Rule (>= 12.0 total points across 9 categories)\nconst rule2Satisfied = (points >= 12.0);\n\n// Submission Eligibility: BOTH conditions must be TRUE\nconst isEligible = rule1Satisfied && rule2Satisfied;\n\nlet statusBadge = '';\nlet statusReason = '';\n\nif (isEligible) {\n  statusBadge = 'SUBMISSION_ELIGIBLE';\n  statusReason = `Eligible for PhD Submission! Dual conditions satisfied: Mandatory Tier-1 publication met (${tier1Count} paper(s)) and ${points}/12.0 cumulative points acquired.`;\n} else if (!rule1Satisfied && rule2Satisfied) {\n  statusBadge = 'MISSING_TIER1';\n  statusReason = `Submission Blocked: Missing mandatory Category 1/2 Publication requirement. Although ${points} points are acquired, candidate has 0 publications in SCI/SCI-E or Top-Notch Level-1 conferences.`;\n} else if (rule1Satisfied && !rule2Satisfied) {\n  statusBadge = 'INSUFFICIENT_POINTS';\n  statusReason = `Submission Blocked: Points Shortfall. Candidate meets Tier-1 (${tier1Count} paper(s)), but has only ${points}/12.0 points (Shortfall: ${(12.0 - points).toFixed(1)} points).`;\n} else {\n  statusBadge = 'NOT_ELIGIBLE';\n  statusReason = `Submission Blocked: Both conditions unmet. 0 Tier-1 publications and ${points}/12.0 points.`;\n}\n\n// Duration check (> 5 years considered stalled)\nconst currentYear = 2026;\nconst isStalled = (currentYear - scholar.admission_year) >= 6;\n\nreturn [{\n  json: {\n    ...scholar,\n    dual_conditions: {\n      rule_1_tier1: {\n        satisfied: rule1Satisfied,\n        tier1_count: tier1Count,\n        required_min: 1\n      },\n      rule_2_cumulative_points: {\n        satisfied: rule2Satisfied,\n        current_points: points,\n        required_points: 12.0,\n        shortfall: Math.max(0, 12.0 - points)\n      }\n    },\n    submission_eligibility: {\n      is_eligible: isEligible,\n      status_badge: statusBadge,\n      status_reason: statusReason\n    },\n    is_stalled: isStalled,\n    stalled_reason: isStalled ? `Admitted in ${scholar.admission_year} exceeding 6-year normative maximum tenure.` : null\n  }\n}];\n"
+      },
+      "id": "node-agent25-eval",
+      "name": "Agent 25: Dual-Condition PhD Regulatory Enforcer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.submission_eligibility.status_badge }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "SUBMISSION_ELIGIBLE",
+              "outputKey": "eligible"
+            },
+            {
+              "value2": "MISSING_TIER1",
+              "outputKey": "missing_tier1"
+            },
+            {
+              "value2": "INSUFFICIENT_POINTS",
+              "outputKey": "insufficient_points"
+            }
+          ]
+        },
+        "fallbackOutput": "not_eligible"
+      },
+      "id": "node-switch-eligibility",
+      "name": "Switch: Submission Eligibility Gate",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1480,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Output for Eligible Candidates: Approve Synopsis / Thesis Submission\nconst item = $input.first().json;\nreturn [{\n  json: {\n    action: \"APPROVE_PHD_SUBMISSION\",\n    recipient: \"Dean of R&D, Doctoral Committee Chairman\",\n    scholar_reg_no: item.reg_no,\n    scholar_name: item.name,\n    supervisor: item.supervisor.name,\n    cumulative_points: item.cumulative_points,\n    tier1_count: item.tier1_count,\n    notification_title: `\u2705 PhD Synopsis & Thesis Submission Approved: ${item.name} (${item.reg_no})`,\n    notification_body: `Scholar has successfully satisfied both regulatory requirements:\\n1. Tier-1 Publications: ${item.tier1_count} in Cat 1/2\\n2. Cumulative Points: ${item.cumulative_points} / 12.0 required.\\n\\nProceed to Doctoral Committee Colloquium & Defense scheduling.`\n  }\n}];\n"
+      },
+      "id": "node-notify-eligible",
+      "name": "Action: Approve Submission & Notify Dean",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Output for Missing Tier-1 Alert\nconst item = $input.first().json;\nreturn [{\n  json: {\n    action: \"BLOCK_SUBMISSION_MISSING_TIER1\",\n    recipient: `Scholar (${item.name}), Supervisor (${item.supervisor.name})`,\n    scholar_reg_no: item.reg_no,\n    scholar_name: item.name,\n    points_acquired: item.cumulative_points,\n    warning: \"\u26a0\ufe0f REGULATORY INTERVENTION: Missing Mandatory Category 1/2 Publication requirement.\",\n    instructions: \"Although 12.0 or more cumulative points have been achieved, VFSTR doctoral regulations strictly require at least ONE paper in SCI/SCI-E/ABDC Journal (Cat 1) or SRB Top-Notch Conf Level 1 (Cat 2). Synopsis submission cannot be unlocked.\"\n  }\n}];\n"
+      },
+      "id": "node-notify-tier1",
+      "name": "Alert: Issue Missing Tier-1 Warning",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Output for Insufficient Points Alert\nconst item = $input.first().json;\nreturn [{\n  json: {\n    action: \"BLOCK_SUBMISSION_SHORTFALL\",\n    recipient: `Scholar (${item.name}), Supervisor (${item.supervisor.name})`,\n    scholar_reg_no: item.reg_no,\n    scholar_name: item.name,\n    current_points: item.cumulative_points,\n    shortfall: item.dual_conditions.rule_2_cumulative_points.shortfall,\n    warning: `\u26a0\ufe0f POINTS SHORTFALL: Candidate has accumulated ${item.cumulative_points} / 12.0 points.`,\n    instructions: `Accumulate at least ${item.dual_conditions.rule_2_cumulative_points.shortfall} additional research points across approved 9 categories to achieve eligibility.`\n  }\n}];\n"
+      },
+      "id": "node-notify-points",
+      "name": "Alert: Issue Points Shortfall Guidance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Output for Ineligible / Early Stage\nconst item = $input.first().json;\nreturn [{\n  json: {\n    action: \"STATUS_INELIGIBLE_EARLY_STAGE\",\n    scholar_reg_no: item.reg_no,\n    scholar_name: item.name,\n    supervisor: item.supervisor.name,\n    message: \"Candidate in early stage. Complete Coursework and Comprehensive Viva before initiating publication compliance reviews.\"\n  }\n}];\n"
+      },
+      "id": "node-notify-early",
+      "name": "Log: Early Stage / Milestone Locked",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 71 & 20: Strategic University KPI Cockpit & Gini Index Engine\nconst items = $input.all().map(i => i.json);\n\nconst total = items.length;\nconst eligible = items.filter(i => i.submission_eligibility?.is_eligible).length;\nconst missingTier1 = items.filter(i => i.submission_eligibility?.status_badge === 'MISSING_TIER1').length;\nconst insufficient = items.filter(i => i.submission_eligibility?.status_badge === 'INSUFFICIENT_POINTS').length;\nconst stalled = items.filter(i => i.is_stalled).length;\n\nreturn [{\n  json: {\n    kpi_report: {\n      timestamp: new Date().toISOString(),\n      institution: \"Vignan's Foundation for Science, Technology & Research (VFSTR)\",\n      total_evaluated_scholars: total,\n      submission_eligible_count: eligible,\n      missing_tier1_warning_count: missingTier1,\n      points_shortfall_count: insufficient,\n      duration_stalled_count: stalled,\n      governance_index: `${Math.round((eligible / Math.max(1, total)) * 100)}% Compliance`,\n      status: \"Verified by Multi-Agent Governance Engine (Agents 25, 17, 18, 20, 59, 71)\"\n    }\n  }\n}];\n"
+      },
+      "id": "node-agent71-kpi",
+      "name": "Agent 71: University Strategic KPI Cockpit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        620
+      ]
+    }
+  ],
+  "connections": {
+    "Daily Academic Governance Schedule": {
+      "main": [
+        [
+          {
+            "node": "Agent 25: Load PhD Scholars Dossiers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PhD Evaluation Webhook": {
+      "main": [
+        [
+          {
+            "node": "Agent 25: Load PhD Scholars Dossiers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 25: Load PhD Scholars Dossiers": {
+      "main": [
+        [
+          {
+            "node": "Agent 17: Publication Ingestion & 9-Category Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 17: Publication Ingestion & 9-Category Scoring": {
+      "main": [
+        [
+          {
+            "node": "Agent 18: Journal Quartile & Predatory Risk Verifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 18: Journal Quartile & Predatory Risk Verifier": {
+      "main": [
+        [
+          {
+            "node": "Agent 25: Dual-Condition PhD Regulatory Enforcer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 25: Dual-Condition PhD Regulatory Enforcer": {
+      "main": [
+        [
+          {
+            "node": "Switch: Submission Eligibility Gate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 71: University Strategic KPI Cockpit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Submission Eligibility Gate": {
+      "main": [
+        [
+          {
+            "node": "Action: Approve Submission & Notify Dean",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert: Issue Missing Tier-1 Warning",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert: Issue Points Shortfall Guidance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: Early Stage / Milestone Locked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00718cf8-131b-4baf-941a-b0320be089c7",
+  "id": "vfstr-phd-multiagent-governance",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "vfstr-multiagent-phd-governance"
+  },
+  "tags": [
+    {
+      "name": "VFSTR University"
+    },
+    {
+      "name": "PhD Monitoring"
+    },
+    {
+      "name": "Multi-Agent AI"
+    },
+    {
+      "name": "Academic Governance"
+    }
+  ]
+}
